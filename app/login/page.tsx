@@ -1,67 +1,100 @@
-import Image from "next/image";
+"use client";
 
-export default function LoginPage() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function SignIn() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://payroll.politekniklp3i-tasikmalaya.ac.id/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ email, password }),
+});
+
+      // 🔥 Cek apakah response JSON atau bukan
+      const contentType = res.headers.get("content-type");
+
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server tidak mengembalikan JSON. Cek API login.");
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login gagal");
+      }
+
+      localStorage.setItem("access_token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-      <main className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-900">
-        
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <Image
-            src="/next.svg"
-            alt="Logo"
-            width={80}
-            height={20}
-            className="dark:invert"
+      <main className="w-full max-w-md rounded-2xl bg-white p-8 shadow dark:bg-zinc-900">
+        <h1 className="mb-6 text-center text-2xl font-semibold">Sign In</h1>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="admin@mail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2"
+            required
           />
-        </div>
 
-        {/* Title */}
-        <h1 className="mb-2 text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Login
-        </h1>
-        <p className="mb-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Masuk ke akun Anda
-        </p>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2"
+            required
+          />
 
-        {/* Form */}
-        <form className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Username
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan username"
-              className="w-full rounded-lg border border-zinc-300 px-4 py-2 focus:border-black focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Password
-            </label>
-            <input
-              type="password"
-              placeholder="Masukkan password"
-              className="w-full rounded-lg border border-zinc-300 px-4 py-2 focus:border-black focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-            />
-          </div>
+          {error && (
+            <p className="rounded bg-red-100 p-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-black py-2 text-white transition hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            disabled={loading}
+            className="w-full rounded-lg bg-black py-2 text-white disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        {/* Footer */}
-        <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-4 text-center text-sm">
           Belum punya akun?{" "}
-          <a href="/register" className="font-medium text-black dark:text-white">
-            Daftar
-          </a>
+          <span
+            onClick={() => router.push("/sign-up")}
+            className="cursor-pointer font-semibold text-blue-600 hover:underline"
+          >
+            Daftar disini
+          </span>
         </p>
       </main>
     </div>
