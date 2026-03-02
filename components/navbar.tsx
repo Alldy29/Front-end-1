@@ -23,44 +23,53 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
-    router.push("/sign-in");
+    router.push("/login");
   };
 
   return (
-    <header className="h-16 bg-white border-b shadow-sm flex items-center justify-between px-6 relative">
-      {/* Left Section */}
-      <h1 className="text-lg font-semibold text-gray-800">
-        Salary Management System
-      </h1>
-
-      {/* Right Section */}
+    // Tambahkan z-40 dan w-full agar memenuhi layar ke kanan
+    <header className="h-16 bg-white border-b shadow-sm flex items-center justify-end px-8 sticky top-0 z-40 w-full">
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-3 focus:outline-none"
+          className="flex items-center gap-3 focus:outline-none hover:bg-gray-50 p-2 rounded-lg transition"
+          aria-haspopup="true"
+          aria-expanded={open}
+          type="button"
         >
-          <div className="w-9 h-9 bg-black text-white flex items-center justify-center rounded-full">
+          <div className="w-9 h-9 bg-zinc-800 text-white flex items-center justify-center rounded-full font-bold shadow-sm">
             {user?.name?.charAt(0).toUpperCase() || "A"}
           </div>
-          <span className="text-sm font-medium text-gray-700">
-            {user?.name || "Admin"}
-          </span>
+          <div className="hidden md:block text-left">
+            <p className="text-sm font-semibold text-gray-700 leading-none">
+              {user?.name || "Admin"}
+            </p>
+          </div>
         </button>
 
-        {/* Dropdown */}
+        {/* Dropdown Menu */}
         {open && (
-          <div className="absolute right-0 mt-3 w-48 bg-white border rounded-lg shadow-md py-2 z-50">
-            <div className="px-4 py-2 text-sm text-gray-600 border-b">
-              {user?.email || "admin@email.com"}
-            </div>
+          <>
+            {/* Overlay untuk menutup dropdown saat klik di luar */}
+            <div className="fixed inset-0 z-[-1]" onClick={() => setOpen(false)}></div>
+            
+            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl py-2 animate-in fade-in zoom-in duration-200">
+              <div className="px-4 py-3 border-b border-gray-50">
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Email</p>
+                <p className="text-sm text-gray-600 truncate">{user?.email || "admin@email.com"}</p>
+              </div>
 
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-100 transition"
-            >
-              Logout
-            </button>
-          </div>
+              <div className="p-1">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition rounded-lg font-medium"
+                  type="button"
+                >
+                  Keluar / Logout
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </header>

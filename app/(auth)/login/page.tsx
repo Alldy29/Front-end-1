@@ -40,7 +40,7 @@ export default function SignIn() {
       localStorage.setItem("access_token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      router.push("/dashboard");
+      router.push("/divisi");
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan");
     } finally {
