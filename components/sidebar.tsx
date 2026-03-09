@@ -1,10 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+
 import {
-  LayoutGrid,
+  LayoutDashboard,
   Database,
   Building2,
   Briefcase,
@@ -15,17 +16,20 @@ import {
   CalendarDays,
   Wallet,
   ChevronDown,
-  ChevronUp,
   LogOut,
   FileText,
   TimerIcon,
   History,
 } from "lucide-react";
 
-export default function Navigation() {
+export default function Sidebar() {
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>("Master");
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    role: string;
+  } | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -34,8 +38,8 @@ export default function Navigation() {
     }
   }, []);
 
-  const toggleMenu = (menuName: string) => {
-    setOpenMenu(openMenu === menuName ? null : menuName);
+  const toggleMenu = (menu: string) => {
+    setOpenMenu(openMenu === menu ? null : menu);
   };
 
   const isActive = (href: string) => {
@@ -46,94 +50,90 @@ export default function Navigation() {
     {
       name: "Dashboard",
       href: "/dashboard",
-      icon: <LayoutGrid size={20} />,
+      icon: <LayoutDashboard size={18} />,
     },
 
     {
       name: "Master",
-      href: "#",
-      icon: <Database size={20} />,
+      icon: <Database size={18} />,
       subMenu: [
-        { name: "Divisi", href: "/divisi", icon: <Building2 size={18} /> },
-        { name: "Jabatan", href: "/jabatan", icon: <Briefcase size={18} /> },
-        { name: "Karyawan", href: "/karyawan", icon: <Users size={18} /> },
-        { name: "User", href: "/user", icon: <UserSquare2 size={18} /> },
-        { name: "Konfigurasi", href: "/konfigurasi", icon: <Settings size={18} /> },
+        { name: "Divisi", href: "/divisi", icon: <Building2 size={16} /> },
+        { name: "Jabatan", href: "/jabatan", icon: <Briefcase size={16} /> },
+        { name: "Karyawan", href: "/karyawan", icon: <Users size={16} /> },
+        { name: "User", href: "/user", icon: <UserSquare2 size={16} /> },
+        { name: "Konfigurasi", href: "/konfigurasi", icon: <Settings size={16} /> },
       ],
     },
 
     {
       name: "Presensi",
-      href: "#",
-      icon: <CalendarCheck size={20} />,
+      icon: <CalendarCheck size={18} />,
       subMenu:
         user?.role === "admin"
           ? [
               {
                 name: "Report Presensi",
                 href: "/presensi",
-                icon: <FileText size={18} />,
+                icon: <FileText size={16} />,
               },
             ]
           : [
               {
                 name: "Kehadiran",
                 href: "/presensi",
-                icon: <CalendarCheck size={18} />,
+                icon: <CalendarCheck size={16} />,
               },
             ],
     },
 
     {
       name: "Cuti",
-      href: "#",
-      icon: <CalendarDays size={20} />,
+      icon: <CalendarDays size={18} />,
       subMenu:
         user?.role === "admin"
           ? [
               {
                 name: "Report Cuti",
                 href: "/cuti",
-                icon: <FileText size={18} />,
+                icon: <FileText size={16} />,
               },
             ]
           : [
               {
-                name: "Form Pengajuan",
+                name: "Pengajuan Cuti",
                 href: "/cuti",
-                icon: <CalendarDays size={18} />,
+                icon: <CalendarDays size={16} />,
               },
               {
                 name: "Riwayat Cuti",
                 href: "/cuti",
-                icon: <History size={18} />,
+                icon: <History size={16} />,
               },
             ],
     },
 
     {
       name: "Gaji",
-      href: "#",
-      icon: <Wallet size={20} />,
+      icon: <Wallet size={18} />,
       subMenu:
         user?.role === "admin"
           ? [
               {
                 name: "Proses Gaji",
                 href: "/gaji/prosesgaji",
-                icon: <TimerIcon size={18} />,
+                icon: <TimerIcon size={16} />,
               },
               {
                 name: "Report Gaji",
                 href: "/gaji/reportgaji",
-                icon: <FileText size={18} />,
+                icon: <FileText size={16} />,
               },
             ]
           : [
               {
                 name: "Slip Gaji",
                 href: "/gaji",
-                icon: <Wallet size={18} />,
+                icon: <Wallet size={16} />,
               },
             ],
     },
@@ -148,102 +148,85 @@ export default function Navigation() {
   };
 
   return (
-    <aside className="w-64 bg-slate-800 min-h-screen text-white flex flex-col">
+    <aside className="fixed left-0 top-0 h-screen w-72 bg-[#0D4C73] text-white p-6 overflow-y-auto shadow-xl">
 
       {/* Logo */}
-      <div className="p-6 border-b border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">S</span>
-          </div>
-          <h1 className="text-2xl font-bold">
-            <span className="text-white">Salary</span>
-            <span className="text-teal-400">App</span>
+      <div className="flex items-center gap-4 mb-12">
+        <div className="w-14 h-14 bg-gradient-to-tr from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg">
+          💰
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-bold tracking-wide">
+            Salary<span className="text-teal-400">App</span>
           </h1>
+          <p className="text-xs text-white/60">Management System</p>
         </div>
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {menuItems.map((item) => {
-          if (item.name === "Master" && user?.role !== "admin") return null;
+      <nav className="space-y-2 text-sm">
 
-          return (
-            <div key={item.name}>
-              {item.subMenu ? (
-                <>
-                  <button
-                    onClick={() => toggleMenu(item.name)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-700/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      {item.icon}
-                      {item.name}
-                    </div>
-
-                    {openMenu === item.name ? (
-                      <ChevronUp size={18} />
-                    ) : (
-                      <ChevronDown size={18} />
-                    )}
-                  </button>
-
-                  {openMenu === item.name && (
-                    <div className="ml-4 mt-1 space-y-1 border-l border-slate-600 pl-3">
-                      {item.subMenu.map((sub) => (
-                        <Link
-                          key={sub.name}
-                          href={sub.href}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                            isActive(sub.href)
-                              ? "bg-teal-600"
-                              : "hover:bg-slate-700"
-                          }`}
-                        >
-                          {sub.icon}
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                    isActive(item.href)
-                      ? "bg-teal-600"
-                      : "hover:bg-slate-700"
-                  }`}
+        {menuItems.map((menu) => (
+          <div key={menu.name}>
+            {!menu.subMenu ? (
+              <Link
+                href={menu.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
+                  isActive(menu.href)
+                    ? "bg-[#2A628F]"
+                    : "hover:bg-[#1B5E8C]"
+                }`}
+              >
+                {menu.icon}
+                {menu.name}
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => toggleMenu(menu.name)}
+                  className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-[#1B5E8C]"
                 >
-                  {item.icon}
-                  {item.name}
-                </Link>
-              )}
-            </div>
-          );
-        })}
+                  <span className="flex items-center gap-3">
+                    {menu.icon}
+                    {menu.name}
+                  </span>
+
+                  <ChevronDown
+                    size={18}
+                    className={`transition-transform ${
+                      openMenu === menu.name ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {openMenu === menu.name && (
+                  <div className="ml-5 mt-2 space-y-2 border-l border-white/20 pl-4">
+                    {menu.subMenu.map((sub) => (
+                      <Link
+                        key={sub.name}
+                        href={sub.href}
+                        className={`flex items-center gap-2 py-2 text-sm ${
+                          isActive(sub.href)
+                            ? "text-teal-400 font-semibold"
+                            : "hover:text-teal-300"
+                        }`}
+                      >
+                        {sub.icon}
+                        {sub.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+
       </nav>
 
-      {/* User */}
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-700/50">
-          <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
-            <span className="font-semibold">
-              {user?.name?.charAt(0)}
-            </span>
-          </div>
-
-          <div className="flex-1">
-            <p className="text-sm font-medium">{user?.name}</p>
-            <p className="text-xs text-slate-400">{user?.email}</p>
-          </div>
-
-          <button onClick={handleLogout}>
-            <LogOut size={18} />
-          </button>
-        </div>
-      </div>
+      {/* Logout */}
+      
     </aside>
   );
 }
