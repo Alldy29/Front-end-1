@@ -27,8 +27,7 @@ export default function Navbar() {
   };
 
   return (
-    // Tambahkan z-40 dan w-full agar memenuhi layar ke kanan
-    <header className="h-16 bg-white border-b shadow-sm flex items-center justify-end px-8 sticky top-0 z-40 w-full">
+    <header className="h-16 bg-white border-b shadow-sm flex items-center justify-end px-8 sticky top-0 z-40">
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
@@ -37,9 +36,12 @@ export default function Navbar() {
           aria-expanded={open}
           type="button"
         >
+          {/* Avatar */}
           <div className="w-9 h-9 bg-zinc-800 text-white flex items-center justify-center rounded-full font-bold shadow-sm">
             {user?.name?.charAt(0).toUpperCase() || "A"}
           </div>
+
+          {/* Nama User */}
           <div className="hidden md:block text-left">
             <p className="text-sm font-semibold text-gray-700 leading-none">
               {user?.name || "Admin"}
@@ -50,15 +52,25 @@ export default function Navbar() {
         {/* Dropdown Menu */}
         {open && (
           <>
-            {/* Overlay untuk menutup dropdown saat klik di luar */}
-            <div className="fixed inset-0 z-[-1]" onClick={() => setOpen(false)}></div>
-            
-            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl py-2 animate-in fade-in zoom-in duration-200">
+            {/* Overlay */}
+            <div
+              className="fixed inset-0"
+              onClick={() => setOpen(false)}
+            ></div>
+
+            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl py-2">
+              
+              {/* Email */}
               <div className="px-4 py-3 border-b border-gray-50">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Email</p>
-                <p className="text-sm text-gray-600 truncate">{user?.email || "admin@email.com"}</p>
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">
+                  Email
+                </p>
+                <p className="text-sm text-gray-600 truncate">
+                  {user?.email || "admin@email.com"}
+                </p>
               </div>
 
+              {/* Logout */}
               <div className="p-1">
                 <button
                   onClick={handleLogout}
@@ -68,6 +80,7 @@ export default function Navbar() {
                   Keluar / Logout
                 </button>
               </div>
+
             </div>
           </>
         )}

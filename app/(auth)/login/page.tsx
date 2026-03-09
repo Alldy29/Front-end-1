@@ -17,19 +17,12 @@ export default function SignIn() {
 
     try {
       const res = await fetch("https://payroll.politekniklp3i-tasikmalaya.ac.id/login", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ email, password }),
-});
-
-      // 🔥 Cek apakah response JSON atau bukan
-      const contentType = res.headers.get("content-type");
-
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server tidak mengembalikan JSON. Cek API login.");
-      }
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await res.json();
 
@@ -37,12 +30,17 @@ export default function SignIn() {
         throw new Error(data.message || "Login gagal");
       }
 
+      const userWithRole = {
+        ...data.user,
+        role: email === "hrd@mail.com" ? "admin" : "karyawan",
+      };
+
       localStorage.setItem("access_token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("user", JSON.stringify(userWithRole));
 
       router.push("/divisi");
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message);
     } finally {
       setLoading(false);
     }

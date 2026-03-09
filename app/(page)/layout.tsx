@@ -23,23 +23,25 @@ export const metadata: Metadata = {
 // app/dashboard/layout.tsx (Contoh struktur)
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* SIDEBAR (Lebar tetap, misal w-64) */}
-      <aside className="w-64 bg-slate-900 hidden md:block">
-        {/* Isi Sidebar Anda */}
-      </aside>
 
-      {/* AREA KONTEN UTAMA */}
-      <div className="flex-1 flex flex-col ">
-        <Navbar /> {/* Navbar akan mengisi sisa lebar layar */}
-        <div className="flex-1 flex flex-col">
-        <Sidebar /> {/* Navbar akan mengisi sisa lebar layar */}
-        </div>
-        <main className="p-6 bg-gray-50 min-h-screen">
-          {children}
-        </main>
-      </div>
-      
+<div className="flex overflow-hidden ">
+    <div className="w-64 bg-slate-900 hidden md:block">
+      {/* SIDEBAR */}
+      <Sidebar />
     </div>
+  {/* AREA KONTEN UTAMA */}
+  <div className="flex-1 flex flex-col">
+    {/* NAVBAR */}
+    <div className="flex-1 flex flex-col h-screen">
+    <Navbar /> {/* Navbar akan mengisi sisa lebar layar */}
+     </div> 
+
+    {/* MAIN CONTENT */}
+    <main className="flex-1 p-8 bg-gray-100">
+       {children}
+    </main>
+  </div>
+</div>
+    
   );
 }
