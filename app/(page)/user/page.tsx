@@ -1,71 +1,152 @@
 "use client";
 
-import { useState } from "react";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function UserPage() {
-  const [users, setUsers] = useState([
-    { nama: "Andi Saputra", email: "andi@email.com", role: "Admin" },
-    { nama: "Budi Santoso", email: "budi@email.com", role: "Staff" },
-  ]);
+  const [userList, setUserList] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  const [showForm, setShowForm] = useState(false);
+  // Form states
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
 
-  const [form, setForm] = useState({
-    nama: "",
-    email: "",
-    password: "",
-    role: "",
-  });
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
-  const handleTambahClick = () => {
-    setShowForm(true);
-    setForm({
-      nama: "",
-      email: "",
-      password: "",
-      role: "",
-    });
+  const fetchUser = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://payroll.politekniklp3i-tasikmalaya.ac.id/api/master-user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal mengambil data user");
+      setUserList(data.data || data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    if (token) {
+      fetchUser();
+    }
+  }, [token]);
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  const handleSimpan = () => {
-    if (!form.nama || !form.email || !form.password || !form.role) return;
+    const url = editingId
+      ? `https://payroll.politekniklp3i-tasikmalaya.ac.id/api/master-user/${editingId}`
+      : "https://payroll.politekniklp3i-tasikmalaya.ac.id/api/master-user";
+    
+    const method = editingId ? "PATCH" : "POST";
 
-    const newUser = {
-      nama: form.nama,
-      email: form.email,
-      role: form.role,
+    const body: any = {
+      name,
+      email,
+      role,
     };
 
-    setUsers([...users, newUser]);
+    if (password || !editingId) {
+      body.password = password;
+    }
 
-    setShowForm(false);
+    try {
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
-    setForm({
-      nama: "",
-      email: "",
-      password: "",
-      role: "",
-    });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || `Gagal ${editingId ? 'mengupdate' : 'menambahkan'} user`);
+      }
+
+      resetForm();
+      fetchUser();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setRole("user");
+    setEditingId(null);
+  };
+
+  const handleEdit = (item: User) => {
+    setEditingId(item.id);
+    setName(item.name);
+    setEmail(item.email);
+    setRole(item.role);
+    setPassword(""); // Clear password during edit
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data user ini?")) return;
+    try {
+      const res = await fetch(`https://payroll.politekniklp3i-tasikmalaya.ac.id/api/master-user/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Gagal menghapus user");
+      }
+      fetchUser();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    }
+  };
+  const [showForm, setShowForm] = useState(false);
+
+  const handleTambahClick = () => {
+    resetForm();
+    setShowForm(true);
   };
 
   const handleBatal = () => {
+    resetForm();
     setShowForm(false);
-  };
-
-  const handleDelete = (index: number) => {
-    setUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
   };
 
   return (
@@ -79,75 +160,82 @@ export default function UserPage() {
             <p className="text-gray-600 mt-1">Kelola data pengguna sistem</p>
           </div>
 
-          <button
-            onClick={handleTambahClick}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow-md transition"
-          >
-            + Tambah User
-          </button>
+          {!showForm && (
+            <button
+              onClick={handleTambahClick}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow-md transition"
+            >
+              + Tambah User
+            </button>
+          )}
         </div>
 
         {/* FORM TAMBAH USER */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <div className="grid grid-cols-4 gap-4">
+            <h3 className="text-lg font-bold text-gray-700 mb-4">
+              {editingId ? "Edit User" : "Tambah User Baru"}
+            </h3>
+            <form onSubmit={(e) => { handleSubmit(e); setShowForm(false); }}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input
+                  type="text"
+                  placeholder="Nama User"
+                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
 
-              <input
-                type="text"
-                name="nama"
-                placeholder="Nama User"
-                className="border rounded-lg px-4 py-2"
-                value={form.nama}
-                onChange={handleChange}
-              />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
 
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="border rounded-lg px-4 py-2"
-                value={form.email}
-                onChange={handleChange}
-              />
+                <input
+                  type="password"
+                  placeholder={editingId ? "Password (kosongkan jika tidak ubah)" : "Password"}
+                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required={!editingId}
+                />
 
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="border rounded-lg px-4 py-2"
-                value={form.password}
-                onChange={handleChange}
-              />
+                <select
+                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500 bg-white"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
 
-              <select
-                name="role"
-                className="border rounded-lg px-4 py-2"
-                value={form.role}
-                onChange={handleChange}
-              >
-                <option value="">Pilih Role</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
-                <option value="Manager">Manager</option>
-              </select>
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-            </div>
+              <div className="flex justify-end space-x-4 mt-4">
+                <button
+                  type="button"
+                  onClick={handleBatal}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                >
+                  Batal
+                </button>
 
-            <div className="flex justify-end space-x-4 mt-4">
-              <button
-                onClick={handleBatal}
-                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
-              >
-                Batal
-              </button>
-
-              <button
-                onClick={handleSimpan}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg"
-              >
-                Simpan
-              </button>
-            </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                >
+                  {loading ? "Proses..." : "Simpan"}
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
@@ -160,7 +248,7 @@ export default function UserPage() {
           <table className="w-full text-left table-auto">
             <thead className="bg-emerald-600 text-white text-sm uppercase">
               <tr>
-                <th className="p-4">No</th>
+                <th className="p-4 w-16">No</th>
                 <th className="p-4">Nama</th>
                 <th className="p-4">Email</th>
                 <th className="p-4">Role</th>
@@ -169,32 +257,35 @@ export default function UserPage() {
             </thead>
 
             <tbody>
-              {users.map((user, index) => (
-                <tr key={index} className="border-b hover:bg-emerald-50">
+              {userList.map((user, index) => (
+                <tr key={user.id} className="border-b hover:bg-emerald-50">
                   <td className="p-4">{index + 1}</td>
-                  <td className="p-4">{user.nama}</td>
+                  <td className="p-4 font-medium">{user.name}</td>
                   <td className="p-4">{user.email}</td>
-                  <td className="p-4">{user.role}</td>
+                  <td className="p-4 text-sm font-semibold text-emerald-700 uppercase">{user.role}</td>
 
                   <td className="p-4 text-right space-x-4">
-                    <button className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-semibold">
-                      <PencilIcon className="w-5 h-5" />
+                    <button 
+                      onClick={() => { handleEdit(user); setShowForm(true); }}
+                      className="text-emerald-600 hover:text-emerald-800 font-semibold"
+                    >
                       Edit
                     </button>
 
                     <button
-                      onClick={() => handleDelete(index)}
-                      className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
+                      onClick={() => handleDelete(user.id)}
+                      className="text-red-600 hover:text-red-800 font-semibold"
                     >
-                      <TrashIcon className="w-5 h-5" />
                       Hapus
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-
           </table>
+          {userList.length === 0 && !loading && (
+            <div className="p-8 text-center text-gray-500">Data tidak ditemukan.</div>
+          )}
         </div>
 
       </div>

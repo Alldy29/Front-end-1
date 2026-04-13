@@ -1,51 +1,133 @@
 "use client";
-import { useState } from "react";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+
+import { useEffect, useState } from "react";
+
+interface Jabatan {
+  id: number;
+  jabatan: string;
+}
+
+interface Karyawan {
+  id: number;
+  nik: string;
+  nama: string;
+  email: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
+  alamat: string;
+  id_jabatan: number;
+  status_aktif: boolean;
+  jabatan?: Jabatan;
+}
 
 export default function KaryawanPage() {
-  const jabatanOptions = ["Staff", "Manager", "HR Officer", "IT Support"];
-  const statusOptions = ["Aktif", "Cuti", "Nonaktif"];
-
-  // Data awal karyawan
-  const [karyawanList, setKaryawanList] = useState([
-    { nik: "001", nama: "Aldyana", email: "aldyana@mail.com", ttl: "Bandung, 01-01-1995", alamat: "Jl. Merdeka 1", jabatan: "Staff", status: "Aktif" },
-    { nik: "002", nama: "Budi", email: "budi@mail.com", ttl: "Jakarta, 15-05-1990", alamat: "Jl. Sudirman 2", jabatan: "Manager", status: "Cuti" },
-    { nik: "003", nama: "Citra", email: "citra@mail.com", ttl: "Surabaya, 10-08-1992", alamat: "Jl. Pemuda 3", jabatan: "HR Officer", status: "Aktif" },
-  ]);
-
+  const [karyawanList, setKaryawanList] = useState<Karyawan[]>([]);
+  const [jabatanList, setJabatanList] = useState<Jabatan[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    nik: "",
-    nama: "",
-    email: "",
-    ttl: "",
-    alamat: "",
-    jabatan: "",
-    status: "",
-  });
 
-  const handleTambahClick = () => {
+  // Form states
+  const [nik, setNik] = useState("");
+  const [nama, setNama] = useState("");
+  const [email, setEmail] = useState("");
+  const [tempatLahir, setTempatLahir] = useState("");
+  const [tanggalLahir, setTanggalLahir] = useState("");
+  const [alamat, setAlamat] = useState("");
+  const [idJabatan, setIdJabatan] = useState<string>("");
+  const [statusAktif, setStatusAktif] = useState(true);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+
+  const fetchJabatan = async () => {
+    try {
+      const res = await fetch("https://payroll.politekniklp3i-tasikmalaya.ac.id/api/jabatan", {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      });
+      const data = await res.json();
+      if (res.ok) setJabatanList(data.data || data);
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchKaryawan = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://payroll.politekniklp3i-tasikmalaya.ac.id/api/karyawan", {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      });
+      const data = await res.json();
+      if (res.ok) setKaryawanList(data.data || data);
+    } catch (err) { setError("Gagal mengambil data"); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    if (token) { fetchJabatan(); fetchKaryawan(); }
+  }, [token]);
+
+  // --- CRUD FUNCTIONS ---
+  const resetForm = () => {
+    setNik(""); setNama(""); setEmail(""); setTempatLahir("");
+    setTanggalLahir(""); setAlamat(""); setIdJabatan(""); setStatusAktif(true);
+    setEditingId(null);
+  };
+
+  const handleSimpan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const method = editingId ? "PATCH" : "POST";
+    const url = editingId 
+      ? `https://payroll.politekniklp3i-tasikmalaya.ac.id/api/karyawan/${editingId}`
+      : "https://payroll.politekniklp3i-tasikmalaya.ac.id/api/karyawan";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          nik, nama, email, tempat_lahir: tempatLahir,
+          tanggal_lahir: tanggalLahir, alamat, id_jabatan: idJabatan,
+          status_aktif: statusAktif
+        }),
+      });
+
+      if (res.ok) {
+        resetForm();
+        setShowForm(false);
+        fetchKaryawan();
+      }
+    } catch (err) { alert("Gagal menyimpan data"); }
+    finally { setLoading(false); }
+  };
+
+  const handleEdit = (item: Karyawan) => {
+    setEditingId(item.id);
+    setNik(item.nik);
+    setNama(item.nama);
+    setEmail(item.email);
+    setTempatLahir(item.tempat_lahir);
+    setTanggalLahir(item.tanggal_lahir);
+    setAlamat(item.alamat);
+    setIdJabatan(item.id_jabatan.toString());
+    setStatusAktif(item.status_aktif);
     setShowForm(true);
-    setFormData({ nik: "", nama: "", email: "", ttl: "", alamat: "", jabatan: "", status: "" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSimpan = () => {
-    // validasi sederhana
-    if (!formData.nik || !formData.nama || !formData.jabatan || !formData.status) return;
-
-    setKaryawanList([...karyawanList, formData]);
-    setShowForm(false);
-    setFormData({ nik: "", nama: "", email: "", ttl: "", alamat: "", jabatan: "", status: "" });
-  };
-
-  const handleBatal = () => {
-    setShowForm(false);
-    setFormData({ nik: "", nama: "", email: "", ttl: "", alamat: "", jabatan: "", status: "" });
+  const handleDelete = async (id: number) => {
+    if (!confirm("Hapus data karyawan ini?")) return;
+    try {
+      const res = await fetch(`https://payroll.politekniklp3i-tasikmalaya.ac.id/api/karyawan/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) fetchKaryawan();
+    } catch (err) { alert("Gagal menghapus"); }
   };
 
   return (
@@ -58,112 +140,134 @@ export default function KaryawanPage() {
             <p className="text-gray-600 mt-1">Kelola data karyawan perusahaan</p>
           </div>
           <button
-            onClick={handleTambahClick}
+            onClick={() => { 
+              if(showForm) resetForm();
+              setShowForm(!showForm); 
+            }}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow-md transition"
           >
-            + Tambah Karyawan
+            {showForm ? "Tutup Form" : "+ Tambah Karyawan"}
           </button>
         </div>
 
-        {/* FORM TAMBAH */}
+        {/* FORM TAMBAH / EDIT */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">NIK</label>
-                <input
-                  type="text"
-                  name="nik"
-                  value={formData.nik}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500"
-                />
+            <h3 className="text-lg font-bold mb-4 text-emerald-700">
+              {editingId ? "Edit Karyawan" : "Tambah Karyawan Baru"}
+            </h3>
+            <form onSubmit={handleSimpan}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-medium text-gray-700 mb-1">NIK</label>
+                  <input 
+                    type="text" 
+                    placeholder="Masukkan NIK" 
+                    value={nik} 
+                    onChange={(e) => setNik(e.target.value)} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black placeholder-gray-400" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-700 mb-1">Nama</label>
+                  <input 
+                    type="text" 
+                    placeholder="Masukkan Nama Lengkap" 
+                    value={nama} 
+                    onChange={(e) => setNama(e.target.value)} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black placeholder-gray-400" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-700 mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    placeholder="contoh@email.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black placeholder-gray-400" 
+                    required 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium text-gray-700 mb-1">Tempat Lahir</label>
+                    <input 
+                      type="text" 
+                      placeholder="Kota" 
+                      value={tempatLahir} 
+                      onChange={(e) => setTempatLahir(e.target.value)} 
+                      className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black placeholder-gray-400" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                    <input 
+                      type="date" 
+                      value={tanggalLahir} 
+                      onChange={(e) => setTanggalLahir(e.target.value)} 
+                      className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black" 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block font-medium text-gray-700 mb-1">Alamat</label>
+                  <textarea 
+                    placeholder="Alamat lengkap..." 
+                    value={alamat} 
+                    onChange={(e) => setAlamat(e.target.value)} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 text-black placeholder-gray-400" 
+                    rows={2} 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-700 mb-1">Jabatan</label>
+                  <select 
+                    value={idJabatan} 
+                    onChange={(e) => setIdJabatan(e.target.value)} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 bg-white text-black" 
+                    required
+                  >
+                    <option value="">Pilih Jabatan</option>
+                    {jabatanList.map((j) => (
+                      <option key={j.id} value={j.id}>{j.jabatan}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium text-gray-700 mb-1">Status</label>
+                  <select 
+                    value={statusAktif ? "1" : "0"} 
+                    onChange={(e) => setStatusAktif(e.target.value === "1")} 
+                    className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 bg-white text-black"
+                  >
+                    <option value="1">Aktif</option>
+                    <option value="0">Tidak Aktif</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Nama</label>
-                <input
-                  type="text"
-                  name="nama"
-                  value={formData.nama}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Tempat & Tanggal Lahir</label>
-                <input
-                  type="text"
-                  name="ttl"
-                  placeholder="Contoh: Bandung, 01-01-1995"
-                  value={formData.ttl}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block font-medium text-gray-700 mb-1">Alamat</label>
-                <textarea
-                  name="alamat"
-                  value={formData.alamat}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Jabatan</label>
-                <select
-                  name="jabatan"
-                  value={formData.jabatan}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 bg-white"
+              <div className="flex justify-end space-x-4 mt-6">
+                <button 
+                  type="button" 
+                  onClick={() => { setShowForm(false); resetForm(); }} 
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-700"
                 >
-                  <option value="">Pilih Jabatan</option>
-                  {jabatanOptions.map((j) => (
-                    <option key={j} value={j}>{j}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="border rounded-lg px-4 py-2 w-full focus:outline-emerald-500 bg-white"
+                  Batal
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2 rounded-lg shadow-md transition disabled:opacity-50 font-bold"
                 >
-                  <option value="">Pilih Status</option>
-                  {statusOptions.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                  {loading ? "Proses..." : editingId ? "Update Data" : "Simpan Data"}
+                </button>
               </div>
-            </div>
-
-            <div className="flex justify-end space-x-4 mt-4">
-              <button onClick={handleBatal} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition">
-                Batal
-              </button>
-              <button onClick={handleSimpan} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-md transition">
-                Simpan
-              </button>
-            </div>
+            </form>
           </div>
         )}
 
@@ -180,33 +284,43 @@ export default function KaryawanPage() {
                 <th className="p-5 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {karyawanList.map((item, index) => (
-                <tr key={index} className="border-b last:border-0 hover:bg-emerald-50 transition">
+                <tr key={item.id} className="hover:bg-emerald-50 transition">
                   <td className="p-4 font-medium text-gray-800">{index + 1}</td>
-                  <td className="p-4 text-gray-900">{item.nama}</td>
-                  <td className="p-4 text-gray-900">{item.jabatan}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded font-semibold text-xs ${
-                      item.status === "Aktif"
-                        ? "bg-green-100 text-green-800"
-                        : item.status === "Cuti"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}>{item.status}</span>
+                    <div className="text-gray-900 font-bold">{item.nama}</div>
+                    <div className="text-xs text-gray-500">{item.email}</div>
+                  </td>
+                  <td className="p-4 text-gray-900">{item.jabatan?.jabatan || 'N/A'}</td>
+                  <td className="p-4">
+                    <span className={`px-2 py-1 rounded-full font-semibold text-xs ${
+                      item.status_aktif ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}>
+                      {item.status_aktif ? "Aktif" : "Non-Aktif"}
+                    </span>
                   </td>
                   <td className="p-4 text-right space-x-4">
-                    <button className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-semibold transition">
-                      <PencilIcon className="w-5 h-5" /> Edit
+                    <button 
+                      onClick={() => handleEdit(item)} 
+                      className="text-emerald-600 hover:text-emerald-800 font-semibold transition"
+                    >
+                      ✏️ Edit
                     </button>
-                    <button className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition">
-                      <TrashIcon className="w-5 h-5" /> Hapus
+                    <button 
+                      onClick={() => handleDelete(item.id)} 
+                      className="text-red-600 hover:text-red-800 font-semibold transition"
+                    >
+                      🗑️ Hapus
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {karyawanList.length === 0 && !loading && (
+            <div className="p-8 text-center text-gray-500 italic">Data tidak ditemukan</div>
+          )}
         </div>
       </div>
     </div>
