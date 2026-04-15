@@ -38,7 +38,7 @@ export default function SignIn() {
       localStorage.setItem("access_token", data.token);
       localStorage.setItem("user", JSON.stringify(userWithRole));
 
-      router.push("/divisi");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
