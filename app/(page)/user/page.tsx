@@ -157,13 +157,13 @@ export default function UserPage() {
         <div className="bg-white rounded-xl shadow-md p-6 mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-extrabold text-gray-900">Data User</h2>
-            <p className="text-gray-600 mt-1">Kelola data pengguna sistem</p>
+            <p className="text-gray-700 mt-1 font-medium">Kelola data pengguna sistem</p>
           </div>
 
           {!showForm && (
             <button
               onClick={handleTambahClick}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow-md transition"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg shadow-md transition font-bold"
             >
               + Tambah User
             </button>
@@ -173,7 +173,7 @@ export default function UserPage() {
         {/* FORM TAMBAH USER */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-700 mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {editingId ? "Edit User" : "Tambah User Baru"}
             </h3>
             <form onSubmit={(e) => { handleSubmit(e); setShowForm(false); }}>
@@ -181,7 +181,7 @@ export default function UserPage() {
                 <input
                   type="text"
                   placeholder="Nama User"
-                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-emerald-500 text-black placeholder-gray-500"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -190,7 +190,7 @@ export default function UserPage() {
                 <input
                   type="email"
                   placeholder="Email"
-                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-emerald-500 text-black placeholder-gray-500"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -199,30 +199,30 @@ export default function UserPage() {
                 <input
                   type="password"
                   placeholder={editingId ? "Password (kosongkan jika tidak ubah)" : "Password"}
-                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500"
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-emerald-500 text-black placeholder-gray-500"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required={!editingId}
                 />
 
                 <select
-                  className="border rounded-lg px-4 py-2 focus:outline-emerald-500 bg-white"
+                  className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-emerald-500 bg-white text-black"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
                 >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
+                  <option value="user" className="text-black">User</option>
+                  <option value="admin" className="text-black">Admin</option>
                 </select>
               </div>
 
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {error && <p className="text-red-600 text-sm mt-2 font-bold">{error}</p>}
 
               <div className="flex justify-end space-x-4 mt-4">
                 <button
                   type="button"
                   onClick={handleBatal}
-                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                  className="px-4 py-2 rounded-lg border border-gray-400 text-black font-bold hover:bg-gray-100 transition"
                 >
                   Batal
                 </button>
@@ -230,7 +230,7 @@ export default function UserPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 font-bold transition"
                 >
                   {loading ? "Proses..." : "Simpan"}
                 </button>
@@ -241,7 +241,7 @@ export default function UserPage() {
 
         {/* TABLE USER */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-          <div className="p-4 border-b font-semibold text-gray-700 text-lg">
+          <div className="p-4 border-b font-bold text-gray-900 text-lg">
             Daftar User
           </div>
 
@@ -256,25 +256,29 @@ export default function UserPage() {
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="text-black">
               {userList.map((user, index) => (
-                <tr key={user.id} className="border-b hover:bg-emerald-50">
-                  <td className="p-4">{index + 1}</td>
-                  <td className="p-4 font-medium">{user.name}</td>
-                  <td className="p-4">{user.email}</td>
-                  <td className="p-4 text-sm font-semibold text-emerald-700 uppercase">{user.role}</td>
+                <tr key={user.id} className="border-b border-gray-100 hover:bg-emerald-50 transition">
+                  <td className="p-4 font-medium">{index + 1}</td>
+                  <td className="p-4 font-bold">{user.name}</td>
+                  <td className="p-4 font-medium">{user.email}</td>
+                  <td className="p-4">
+                    <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-1 rounded uppercase">
+                        {user.role}
+                    </span>
+                  </td>
 
                   <td className="p-4 text-right space-x-4">
                     <button 
                       onClick={() => { handleEdit(user); setShowForm(true); }}
-                      className="text-emerald-600 hover:text-emerald-800 font-semibold"
+                      className="text-emerald-700 hover:text-emerald-900 font-bold"
                     >
                       Edit
                     </button>
 
                     <button
                       onClick={() => handleDelete(user.id)}
-                      className="text-red-600 hover:text-red-800 font-semibold"
+                      className="text-red-600 hover:text-red-800 font-bold"
                     >
                       Hapus
                     </button>
@@ -284,7 +288,7 @@ export default function UserPage() {
             </tbody>
           </table>
           {userList.length === 0 && !loading && (
-            <div className="p-8 text-center text-gray-500">Data tidak ditemukan.</div>
+            <div className="p-8 text-center text-gray-900 font-medium">Data tidak ditemukan.</div>
           )}
         </div>
 

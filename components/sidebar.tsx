@@ -43,9 +43,10 @@ export default function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
+  // Logic pembatasan menu berdasarkan role
   const menuItems = [
     {
       name: "Dashboard",
@@ -53,17 +54,26 @@ export default function Sidebar() {
       icon: <LayoutDashboard size={18} />,
     },
 
-    {
-      name: "Master",
-      icon: <Database size={18} />,
-      subMenu: [
-        { name: "Divisi", href: "/divisi", icon: <Building2 size={16} /> },
-        { name: "Jabatan", href: "/jabatan", icon: <Briefcase size={16} /> },
-        { name: "Karyawan", href: "/karyawan", icon: <Users size={16} /> },
-        { name: "User", href: "/user", icon: <UserSquare2 size={16} /> },
-        { name: "Konfigurasi", href: "/konfigurasi", icon: <Settings size={16} /> },
-      ],
-    },
+    // MENU MASTER: Hanya tampil jika role adalah admin
+    ...(user?.role === "admin"
+      ? [
+          {
+            name: "Master",
+            icon: <Database size={18} />,
+            subMenu: [
+              { name: "Divisi", href: "/divisi", icon: <Building2 size={16} /> },
+              { name: "Jabatan", href: "/jabatan", icon: <Briefcase size={16} /> },
+              { name: "Karyawan", href: "/karyawan", icon: <Users size={16} /> },
+              { name: "User", href: "/user", icon: <UserSquare2 size={16} /> },
+              {
+                name: "Konfigurasi",
+                href: "/konfigurasi",
+                icon: <Settings size={16} />,
+              },
+            ],
+          },
+        ]
+      : []),
 
     {
       name: "Presensi",
@@ -106,7 +116,7 @@ export default function Sidebar() {
               },
               {
                 name: "Riwayat Cuti",
-                href: "/cuti",
+                href: "/cuti/history", // Pastikan href unik jika diperlukan
                 icon: <History size={16} />,
               },
             ],
@@ -146,7 +156,7 @@ export default function Sidebar() {
       window.location.href = "/sign-in";
     }
   };
-
+  
   return (
     <aside className="fixed left-0 top-0 h-screen w-72 bg-[#0D4C73] text-white p-6 overflow-y-auto shadow-xl">
 

@@ -233,7 +233,7 @@ export default function DivisiPage() {
       </div>
 
       {/* ================= FORM SECTION (Muncul saat tambah/edit) ================= */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-2xl">
+      <div className="text-black bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-2xl">
         <div className="flex items-center gap-4 mb-8">
           <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-2xl">
             {editingId ? "📝" : "📂"}
